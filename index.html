@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 修改1：网页标签页的名字 -->
     <title>哈哈哈</title>
     <style>
         * {
@@ -921,7 +920,7 @@
     <div class="app">
         <div class="card">
             <h1>
-                <!-- 修改2：页面主标题 -->
+                <!-- 已修改：这里替换为哈哈哈 -->
                 ⏱️ 哈哈哈
                 <span>按月汇总</span>
             </h1>
@@ -1042,9 +1041,6 @@
 
     <script>
         (function() {
-            // =========================================================
-            // ☁️ JSONBin 云端配置
-            // =========================================================
             const JSONBIN_BIN_ID = '6ad709dfac6210605a41560a'; 
             const JSONBIN_MASTER_KEY = '$2a$10$aBvRye9/VnNj1C.GQOei6.RRC/3/iuNF1AzfVC6q7SMbBln8d1Aqe'; 
             
@@ -1056,7 +1052,6 @@
             let selectedMonth = getCurrentMonthStr();
             let standardHours = 6; 
             
-            // 防并发覆盖标志
             let isSyncing = false;
 
             const employeeTabsEl = document.getElementById('employeeTabs');
@@ -1220,9 +1215,6 @@
                 return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
             }
 
-            // =========================================================
-            // ☁️ 核心：防覆盖同步操作器
-            // =========================================================
             async function syncAction(actionFn) {
                 if (isSyncing) {
                     alert('正在与云端同步数据，请稍候...');
@@ -1232,9 +1224,9 @@
                 document.body.style.cursor = 'wait';
 
                 try {
-                    await load(); // 强制拉取最新
-                    actionFn();   // 执行修改
-                    await save(); // 推回云端
+                    await load(); 
+                    actionFn();   
+                    await save(); 
                 } catch (e) {
                     console.error('同步操作失败', e);
                     alert('网络异常，本次操作未能保存到云端，请检查网络后重试！');
@@ -1306,9 +1298,6 @@
                 currentEmployeeId = employees[0].id;
             }
 
-            // =========================================================
-            // 渲染与 UI 逻辑
-            // =========================================================
             function updateDateStatusBadge() {
                 const today = getTodayStr();
                 if (selectedDate === today) {
