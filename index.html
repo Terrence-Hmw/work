@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多人打卡 · 月度加班统计 (6小时制)</title>
+    <title>多人打卡 · 月度加班统计</title>
     <style>
         * {
             box-sizing: border-box;
@@ -52,14 +52,29 @@
             flex-wrap: wrap;
         }
 
-        h1 span {
+        .std-hours-badge {
             background: #2d5e7a;
             color: white;
             font-size: 0.85rem;
             font-weight: 400;
-            padding: 4px 16px;
+            padding: 6px 16px;
             border-radius: 40px;
             box-shadow: 0 2px 6px rgba(45, 94, 122, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .std-hours-badge:hover {
+            background: #1e4a62;
+            transform: scale(1.05);
+        }
+
+        .std-hours-badge .edit-icon {
+            font-size: 0.75rem;
+            opacity: 0.8;
         }
 
         .subhead {
@@ -897,7 +912,10 @@
         <div class="card">
             <h1>
                 ⏱️ 多人考勤 · 加班计算
-                <span>标准工时 6h</span>
+                <!-- 将原来的标准工时标签改为可点击修改 -->
+                <div class="std-hours-badge" id="editStdHoursBtn" title="点击修改每日标准工时">
+                    标准工时 <span id="displayStdHours">6</span>h <span class="edit-icon">✎</span>
+                </div>
             </h1>
             <div class="subhead">
                 <span>秒级精度 · 月度统计 · 多员工管理</span>
@@ -1000,7 +1018,7 @@
             </h2>
             <div class="overview-grid" id="overviewGrid"></div>
             <div class="note">
-                <strong>加班规则：</strong> 每人每日工作超过 6 小时的部分计为加班。时间精确到秒，相同起止时间不会误算。
+                <strong>加班规则：</strong> 每人每日工作超过 <span class="dynamic-std">6</span> 小时的部分计为加班。时间精确到秒，相同起止时间不会误算。
             </div>
         </div>
     </div>
@@ -1008,7 +1026,7 @@
     <script>
         (function() {
             // =========================================================
-            // ☁️ JSONBin 云端配置 (已填入)
+            // ☁️ JSONBin 云端配置
             // =========================================================
             const JSONBIN_BIN_ID = '6ad709dfac6210605a41560a'; 
             const JSONBIN_MASTER_KEY = '$2a$10$aBvRye9/VnNj1C.GQOei6.RRC/3/iuNF1AzfVC6q7SMbBln8d1Aqe'; 
@@ -1019,9 +1037,15 @@
             let currentEmployeeId = null;
             let selectedDate = getTodayStr();
             let selectedMonth = getCurrentMonthStr();
+            
+            // 默认标准工时，支持小数（如 7.5）
+            let standardHours = 6; 
 
             const employeeTabsEl = document.getElementById('employeeTabs');
             const addEmpBtn = document.getElementById('addEmpBtn');
+            const editStdHoursBtn = document.getElementById('editStdHoursBtn');
+            const displayStdHours = document.getElementById('displayStdHours');
+            
             const monthPicker = document.getElementById('monthPicker');
             const prevMonthBtn = document.getElementById('prevMonthBtn');
             const nextMonthBtn = document.getElementById('nextMonthBtn');
@@ -1114,6 +1138,7 @@
                 return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
             }
 
+            // 计算单条记录，使用动态的 standardHours
             function calcRecord(record) {
                 if (!record.checkIn || !record.checkOut) {
                     return { workSeconds: 0, overtimeSeconds: 0 };
@@ -1128,7 +1153,9 @@
                 if (totalSeconds <= 0) {
                     return { workSeconds: 0, overtimeSeconds: 0 };
                 }
-                const standardSeconds = 6 * 3600;
+                
+                // 这里的 standardSeconds 现在使用用户设定的 standardHours
+                const standardSeconds = standardHours * 3600;
                 const workSeconds = totalSeconds;
                 const overtimeSeconds = Math.max(0, totalSeconds - standardSeconds);
                 return { workSeconds, overtimeSeconds };
@@ -1177,16 +1204,15 @@
             }
 
             // =========================================================
-            // ☁️ 云端同步核心：save() 和 load()
+            // ☁️ 云端同步核心
             // =========================================================
             async function save() {
-                const dataToSave = { employees, currentEmployeeId };
-                // 1. 本地保存（双保险）
+                // 把 standardHours 也存入云端，实现配置同步
+                const dataToSave = { employees, currentEmployeeId, standardHours };
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
                 } catch (e) { console.warn('本地备份失败', e); }
 
-                // 2. 云端保存
                 try {
                     const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                         method: 'PUT',
@@ -1198,8 +1224,6 @@
                     });
                     if(response.ok) {
                         console.log('云端同步成功');
-                    } else {
-                        console.error('云端保存失败，状态码:', response.status);
                     }
                 } catch (e) {
                     console.error('云端保存网络错误:', e);
@@ -1207,7 +1231,6 @@
             }
 
             async function load() {
-                // 1. 优先尝试从云端加载
                 try {
                     const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
                         headers: {
@@ -1222,10 +1245,11 @@
                     if (cloudData && Array.isArray(cloudData.employees) && cloudData.employees.length > 0) {
                         employees = cloudData.employees;
                         currentEmployeeId = cloudData.currentEmployeeId;
+                        // 读取云端保存的标准工时
+                        standardHours = cloudData.standardHours !== undefined ? cloudData.standardHours : 6;
                         console.log('云端加载成功');
-                        return; // 成功加载云端，直接退出
+                        return;
                     } else {
-                        // 云端没有数据（第一次使用），初始化默认员工并同步上去
                         initDefault();
                         await save(); 
                         return;
@@ -1234,7 +1258,6 @@
                     console.error('云端加载失败，尝试使用本地数据:', e);
                 }
 
-                // 2. 如果云端失败，从本地加载
                 try {
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
@@ -1245,13 +1268,13 @@
                                 if (!Array.isArray(e.records)) e.records = [];
                             });
                             currentEmployeeId = parsed.currentEmployeeId;
+                            standardHours = parsed.standardHours !== undefined ? parsed.standardHours : 6;
                         }
                     }
                 } catch (e) {
                     console.warn('本地加载失败', e);
                 }
 
-                // 3. 如果都没有，初始化
                 if (!employees || employees.length === 0) {
                     initDefault();
                 }
@@ -1580,6 +1603,12 @@
             }
 
             function renderAll() {
+                // 更新顶部和底部的标准工时显示
+                displayStdHours.textContent = standardHours;
+                document.querySelectorAll('.dynamic-std').forEach(el => {
+                    el.textContent = standardHours;
+                });
+
                 updateDateStatusBadge();
                 renderEmployeeTabs();
                 renderCurrentEmployeeHeader();
@@ -1630,6 +1659,32 @@
                 renderOverview();
             }
 
+            // 点击标准工时徽章的事件处理
+            function editStandardHours() {
+                const val = prompt('请输入每日标准工时（小时），支持小数（例如：6 或 7.5）：', standardHours);
+                if (val === null) return; // 点了取消
+                
+                const num = parseFloat(val);
+                if (isNaN(num) || num <= 0 || num > 24) {
+                    alert('请输入 0 到 24 之间的有效数字');
+                    return;
+                }
+                
+                standardHours = num;
+                
+                // 重新计算所有人的所有记录（因为标准变了，加班时间也会变）
+                employees.forEach(emp => {
+                    emp.records.forEach(rec => {
+                        const calc = calcRecord(rec);
+                        rec.workSeconds = calc.workSeconds;
+                        rec.overtimeSeconds = calc.overtimeSeconds;
+                    });
+                });
+                
+                save(); // 保存到云端
+                renderAll(); // 刷新界面
+            }
+
             async function init() {
                 await load();
                 
@@ -1651,6 +1706,9 @@
                 checkInBtn.addEventListener('click', punchCheckIn);
                 checkOutBtn.addEventListener('click', punchCheckOut);
                 clearEmpBtn.addEventListener('click', clearCurrentEmployeeRecords);
+                
+                // 绑定修改标准工时的点击事件
+                editStdHoursBtn.addEventListener('click', editStandardHours);
 
                 datePicker.addEventListener('change', (e) => {
                     if (e.target.value) {
