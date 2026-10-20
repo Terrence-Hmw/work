@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多人打卡 · 月度加班统计 (6小时制)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(145deg, #eef6fd 0%, #d6e6f2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 24px 16px;
+            margin: 0;
+        }
+
+        .app {
+            max-width: 1150px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 40px;
+            padding: 30px 26px 26px;
+            box-shadow: 0 25px 40px -14px rgba(0, 20, 40, 0.28),
+                        0 2px 10px 0 rgba(0, 0, 0, 0.05),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #1a2e3f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        h1 span {
+            background: #2d5e7a;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 400;
+            padding: 4px 16px;
+            border-radius: 40px;
+            box-shadow: 0 2px 6px rgba(45, 94, 122, 0.2);
+        }
+
+        .subhead {
+            color: #476c84;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .rule-badge {
+            background: #d4e6f2;
+            padding: 3px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+            color: #1e4a62;
+            font-size: 0.8rem;
+        }
+
+        .employee-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            background: rgba(240, 248, 255, 0.6);
+            padding: 12px 16px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .employee-bar-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #3f5d70;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-right: 4px;
+        }
+
+        .employee-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .emp-tab {
+            background: white;
+            border: 1px solid #d0e0ec;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2d4b5e;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px -2px rgba(0,0,0,0.06);
+        }
+
+        .emp-tab:hover {
+            background: #f2f9ff;
+            border-color: #9ebfd6;
+        }
+
+        .emp-tab.active {
+            background: #2d5e7a;
+            color: white;
+            border-color: #2d5e7a;
+            box-shadow: 0 6px 14px -6px #1d465c;
+        }
+
+        .emp-tab .emp-ot-badge {
+            font-size: 0.65rem;
+            background: rgba(255,255,255,0.25);
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .emp-tab:not(.active) .emp-ot-badge {
+            background: #ffe6e6;
+            color: #b14e4e;
+        }
+
+        .add-emp-btn {
+            background: #e7f0f7;
+            border: 1px dashed #8fb3ca;
+            color: #1e4a62;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .add-emp-btn:hover {
+            background: #dae9f4;
+            border-color: #5e8ba8;
+        }
+
+        .date-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 16px -10px rgba(0, 30, 60, 0.15);
+        }
+
+        .date-bar-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #3f5d70;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .date-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border-radius: 40px;
+            padding: 6px 16px;
+            border: 1px solid #d9e4ed;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .date-input-wrapper input[type="date"] {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #0a2538;
+            outline: none;
+            padding: 4px 0;
+            font-variant-numeric: tabular-nums;
+            cursor: pointer;
+        }
+
+        .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .date-quick-btn {
+            background: #e7f0f7;
+            border: none;
+            border-radius: 40px;
+            padding: 7px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #1e4a62;
+            cursor: pointer;
+            transition: 0.15s;
+            border: 1px solid #b8d0e0;
+        }
+
+        .date-quick-btn:hover {
+            background: #d4e4f0;
+        }
+
+        .date-status-badge {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: #1e4a62;
+            background: #e6f2fa;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 500;
+            border: 1px solid #c2d9e8;
+        }
+
+        .date-status-badge.today {
+            background: #e2f0ec;
+            color: #1e6b4a;
+            border-color: #b8dcc9;
+        }
+
+        .month-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: linear-gradient(120deg, #e8f2fb 0%, #f0f8ff 100%);
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1px solid #c8dfef;
+            box-shadow: 0 6px 16px -10px rgba(0, 30, 60, 0.15);
+        }
+
+        .month-bar-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e4a62;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .month-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border-radius: 40px;
+            padding: 6px 16px;
+            border: 1px solid #b8d0e0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .month-input-wrapper input[type="month"] {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #0a2538;
+            outline: none;
+            padding: 4px 0;
+            font-variant-numeric: tabular-nums;
+            cursor: pointer;
+        }
+
+        .month-input-wrapper input[type="month"]::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .month-nav-btn {
+            background: white;
+            border: 1px solid #b8d0e0;
+            border-radius: 40px;
+            padding: 7px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e4a62;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .month-nav-btn:hover {
+            background: #e7f0f7;
+            border-color: #8fb3ca;
+        }
+
+        .month-summary-inline {
+            margin-left: auto;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: #1e4a62;
+        }
+
+        .month-summary-inline strong {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .month-summary-inline .ot-val {
+            color: #b14e4e;
+        }
+
+        .current-emp-name {
+            font-size: 1.3rem;
+            font-weight: 650;
+            color: #0e2f41;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .del-emp-btn {
+            background: #ffecec;
+            border: none;
+            color: #b14e4e;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: 0.15s;
+        }
+
+        .del-emp-btn:hover {
+            background: #ffdada;
+        }
+
+        .punch-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 8px 0 18px;
+        }
+
+        .punch-btn {
+            flex: 1 1 180px;
+            border: none;
+            padding: 24px 16px;
+            border-radius: 28px;
+            font-size: 1.05rem;
+            font-weight: 650;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.2);
+            border: 2px solid transparent;
+            letter-spacing: 0.3px;
+        }
+
+        .punch-btn .icon {
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+        .punch-btn .sub-text {
+            font-size: 0.75rem;
+            font-weight: 400;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .btn-checkin {
+            background: #2d7a5e;
+            color: white;
+        }
+
+        .btn-checkin:hover:not(:disabled) {
+            background: #236b50;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 24px -10px #1d5a42;
+        }
+
+        .btn-checkout {
+            background: #b14e4e;
+            color: white;
+        }
+
+        .btn-checkout:hover:not(:disabled) {
+            background: #9e4141;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 24px -10px #8e3b3b;
+        }
+
+        .punch-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.2);
+        }
+
+        .punch-btn:disabled {
+            opacity: 0.42;
+            filter: grayscale(0.5);
+            pointer-events: none;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .today-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            flex: 1 1 150px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 22px;
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 14px -8px rgba(0, 30, 60, 0.15);
+        }
+
+        .status-card .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #527a91;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status-card .time {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0e2f41;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.3;
+        }
+
+        .status-card .time.placeholder {
+            color: #9db8c9;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .status-card .extra {
+            font-size: 0.78rem;
+            color: #5e8198;
+            margin-top: 2px;
+        }
+
+        .today-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            background: linear-gradient(115deg, #ffffffcc 0%, #e9f2f9cc 100%);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 18px 22px;
+            margin: 18px 0 20px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 12px 22px -12px rgba(0, 20, 40, 0.2);
+            align-items: center;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1 1 100px;
+        }
+
+        .summary-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #527a91;
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #0e2f41;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .summary-value small {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #4e7188;
+            margin-left: 4px;
+        }
+
+        .summary-value.ot {
+            color: #b14e4e;
+        }
+
+        .emp-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 4px 14px;
+            padding: 0 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .emp-total-row .label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2d4b5e;
+        }
+
+        .emp-total-row .value {
+            font-weight: 700;
+            color: #b14e4e;
+            font-size: 1.3rem;
+        }
+
+        .emp-total-row .days {
+            font-size: 0.8rem;
+            color: #4e7188;
+        }
+
+        .history-section {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.45);
+            border-radius: 26px;
+            padding: 14px 14px 8px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 4px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #2d4b5e;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .history-filter {
+            font-size: 0.75rem;
+            color: #2d5e7a;
+            background: #e6f2fa;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #b0c8d8;
+            color: #3d5d72;
+            font-size: 0.7rem;
+            padding: 5px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: #6d8ea0;
+        }
+
+        .record-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+            font-size: 0.88rem;
+        }
+
+        .record-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: #1e3b4c;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            margin-bottom: 4px;
+            backdrop-filter: blur(2px);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .record-list li:last-child {
+            border-bottom: none;
+        }
+
+        .record-list li.today-record {
+            background: rgba(230, 245, 240, 0.65);
+            border: 1px solid #b8dcc9;
+        }
+
+        .record-date {
+            font-weight: 600;
+            color: #19445c;
+            min-width: 78px;
+            font-size: 0.82rem;
+        }
+
+        .record-date .today-tag {
+            font-size: 0.6rem;
+            background: #2d7a5e;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 20px;
+            margin-left: 4px;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .record-times {
+            display: flex;
+            gap: 10px;
+            color: #2d5770;
+            font-variant-numeric: tabular-nums;
+            flex-wrap: wrap;
+        }
+
+        .record-times span {
+            background: rgba(235, 245, 255, 0.7);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+        }
+
+        .record-work {
+            font-weight: 600;
+            color: #1e6b4a;
+            background: #e2f0ec;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .record-overtime {
+            font-weight: 650;
+            color: #b14e4e;
+            background: #ffecec;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .record-overtime.zero {
+            color: #4a7a6e;
+            background: #e2f0ec;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .record-actions button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: 0.15s;
+        }
+
+        .edit-rec-btn {
+            color: #2d5e7a;
+            background: #e6f2fa;
+        }
+
+        .edit-rec-btn:hover {
+            background: #d0e6f5;
+        }
+
+        .del-rec-btn {
+            color: #b14e4e;
+            background: #ffecec;
+        }
+
+        .del-rec-btn:hover {
+            background: #ffdada;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #7b95a6;
+            padding: 20px 0 14px;
+            font-style: italic;
+            font-size: 0.88rem;
+        }
+
+        .overview-card {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(14px);
+            border-radius: 36px;
+            padding: 24px 26px 22px;
+            box-shadow: 0 20px 34px -16px rgba(0, 20, 40, 0.25),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .overview-card h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #1a2e3f;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .overview-card .month-label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #4e7188;
+            background: #e6f2fa;
+            padding: 4px 14px;
+            border-radius: 30px;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .overview-item {
+            background: rgba(245, 251, 255, 0.8);
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 12px -8px rgba(0, 30, 60, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: 0.15s;
+            cursor: pointer;
+        }
+
+        .overview-item:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .overview-item.active-emp {
+            outline: 2px solid #2d5e7a;
+            background: #f2f9ff;
+        }
+
+        .overview-name {
+            font-weight: 600;
+            color: #1e4a62;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .overview-name .small-badge {
+            font-size: 0.65rem;
+            color: #5e8198;
+            font-weight: 400;
+            background: #e6eff6;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .overview-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .overview-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overview-stat .num {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0e2f41;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .overview-stat .num.ot {
+            color: #b14e4e;
+        }
+
+        .overview-stat .lbl {
+            font-size: 0.62rem;
+            color: #5e8198;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 500;
+        }
+
+        .note {
+            font-size: 0.7rem;
+            text-align: center;
+            color: #7f9aaa;
+            margin-top: 16px;
+            letter-spacing: 0.2px;
+            border-top: 1px solid #c8dae6;
+            padding-top: 12px;
+        }
+
+        .note strong {
+            color: #2d5e7a;
+        }
+
+        @media (max-width: 650px) {
+            .card, .overview-card {
+                padding: 20px 16px 18px;
+                border-radius: 28px;
+            }
+            h1 { font-size: 1.45rem; }
+            .summary-value { font-size: 1.4rem; }
+            .emp-total-row .value { font-size: 1.1rem; }
+            .overview-grid { grid-template-columns: 1fr 1fr; }
+            .overview-stats { flex-direction: column; gap: 4px; }
+            .employee-bar { border-radius: 24px; padding: 10px; }
+            .emp-tab { padding: 6px 12px; font-size: 0.82rem; }
+            .punch-btn { padding: 18px 12px; font-size: 0.95rem; }
+            .punch-btn .icon { font-size: 1.4rem; }
+            .date-bar, .month-bar { border-radius: 24px; padding: 12px; }
+            .date-status-badge { margin-left: 0; }
+            .month-summary-inline { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="card">
+            <h1>
+                ⏱️ 多人考勤 · 加班计算
+                <span>标准工时 6h</span>
+            </h1>
+            <div class="subhead">
+                <span>秒级精度 · 月度统计 · 多员工管理</span>
+                <span class="rule-badge">按月汇总</span>
+            </div>
+
+            <div class="employee-bar">
+                <span class="employee-bar-label">员工</span>
+                <div class="employee-tabs" id="employeeTabs"></div>
+                <button class="add-emp-btn" id="addEmpBtn">＋ 添加员工</button>
+            </div>
+
+            <div class="month-bar">
+                <span class="month-bar-label">📆 月份统计</span>
+                <button class="month-nav-btn" id="prevMonthBtn" title="上个月">←</button>
+                <div class="month-input-wrapper">
+                    <input type="month" id="monthPicker">
+                </div>
+                <button class="month-nav-btn" id="nextMonthBtn" title="下个月">→</button>
+                <button class="month-nav-btn" id="currentMonthBtn">本月</button>
+                <div class="month-summary-inline" id="monthSummaryInline">
+                    <span>出勤 <strong id="monthDaysCount">0</strong> 天</span>
+                    <span>工时 <strong id="monthWorkSum">0</strong> h</span>
+                    <span>加班 <strong class="ot-val" id="monthOtSum">0</strong> h</span>
+                </div>
+            </div>
+
+            <div class="date-bar">
+                <span class="date-bar-label">📅 打卡日期</span>
+                <div class="date-input-wrapper">
+                    <input type="date" id="datePicker">
+                </div>
+                <button class="date-quick-btn" id="todayBtn">今天</button>
+                <button class="date-quick-btn" id="yesterdayBtn">昨天</button>
+                <span class="date-status-badge" id="dateStatusBadge">今天</span>
+            </div>
+
+            <div class="current-emp-name" id="currentEmpName"></div>
+
+            <div class="punch-area">
+                <button class="punch-btn btn-checkin" id="checkInBtn">
+                    <span class="icon">☀️</span>
+                    <span>上班打卡</span>
+                    <span class="sub-text" id="checkInSub">未打卡</span>
+                </button>
+                <button class="punch-btn btn-checkout" id="checkOutBtn">
+                    <span class="icon">🌙</span>
+                    <span>下班打卡</span>
+                    <span class="sub-text" id="checkOutSub">未打卡</span>
+                </button>
+            </div>
+
+            <div class="today-status">
+                <div class="status-card">
+                    <div class="label">上班打卡</div>
+                    <div class="time" id="todayInTime">--:--:--</div>
+                    <div class="extra" id="todayInExtra"></div>
+                </div>
+                <div class="status-card">
+                    <div class="label">下班打卡</div>
+                    <div class="time" id="todayOutTime">--:--:--</div>
+                    <div class="extra" id="todayOutExtra"></div>
+                </div>
+                <div class="status-card">
+                    <div class="label">工时 / 加班</div>
+                    <div class="time" id="todayWorkDisplay" style="font-size:1.3rem;">0.0 / 0.0 <small style="font-size:0.8rem;font-weight:400;">h</small></div>
+                    <div class="extra" id="todayCalcExtra"></div>
+                </div>
+            </div>
+
+            <div class="today-summary">
+                <div class="summary-item">
+                    <div class="summary-label">当日工时</div>
+                    <div class="summary-value" id="todayWorkHours">0.0 <small>小时</small></div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">当日加班</div>
+                    <div class="summary-value ot" id="todayOvertime">0.0 <small>小时</small></div>
+                </div>
+                <div class="summary-item" style="flex:2 1 160px; text-align:right;">
+                    <div class="summary-label">累计加班（全部）</div>
+                    <div class="summary-value ot" id="empTotalOvertime" style="font-size:1.7rem;">0.0 <small>小时</small></div>
+                    <div style="font-size:0.78rem; color:#5e8198; margin-top:2px;">全部记录 <span id="empTotalDays">0</span> 天</div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-header">
+                    <h2>📋 加班记录 <span class="history-filter" id="historyFilterLabel">本月</span></h2>
+                    <button class="clear-btn" id="clearEmpBtn">清除该员工全部记录</button>
+                </div>
+                <ul class="record-list" id="recordList"></ul>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <h2>
+                🏢 全体员工月度加班概览
+                <span class="month-label" id="overviewMonthLabel"></span>
+            </h2>
+            <div class="overview-grid" id="overviewGrid"></div>
+            <div class="note">
+                <strong>加班规则：</strong> 每人每日工作超过 6 小时的部分计为加班。时间精确到秒，相同起止时间不会误算。数据保存在浏览器中。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const STORAGE_KEY = 'attendance_punch_v5_month';
+
+            let employees = [];
+            let currentEmployeeId = null;
+            let selectedDate = getTodayStr();
+            let selectedMonth = getCurrentMonthStr();
+
+            const employeeTabsEl = document.getElementById('employeeTabs');
+            const addEmpBtn = document.getElementById('addEmpBtn');
+            const monthPicker = document.getElementById('monthPicker');
+            const prevMonthBtn = document.getElementById('prevMonthBtn');
+            const nextMonthBtn = document.getElementById('nextMonthBtn');
+            const currentMonthBtn = document.getElementById('currentMonthBtn');
+            const monthDaysCount = document.getElementById('monthDaysCount');
+            const monthWorkSum = document.getElementById('monthWorkSum');
+            const monthOtSum = document.getElementById('monthOtSum');
+            const datePicker = document.getElementById('datePicker');
+            const todayBtn = document.getElementById('todayBtn');
+            const yesterdayBtn = document.getElementById('yesterdayBtn');
+            const dateStatusBadge = document.getElementById('dateStatusBadge');
+            const currentEmpNameEl = document.getElementById('currentEmpName');
+            const checkInBtn = document.getElementById('checkInBtn');
+            const checkOutBtn = document.getElementById('checkOutBtn');
+            const checkInSub = document.getElementById('checkInSub');
+            const checkOutSub = document.getElementById('checkOutSub');
+            const todayInTimeEl = document.getElementById('todayInTime');
+            const todayOutTimeEl = document.getElementById('todayOutTime');
+            const todayInExtra = document.getElementById('todayInExtra');
+            const todayOutExtra = document.getElementById('todayOutExtra');
+            const todayWorkDisplayEl = document.getElementById('todayWorkDisplay');
+            const todayCalcExtra = document.getElementById('todayCalcExtra');
+            const todayWorkHoursEl = document.getElementById('todayWorkHours');
+            const todayOvertimeEl = document.getElementById('todayOvertime');
+            const empTotalOvertimeEl = document.getElementById('empTotalOvertime');
+            const empTotalDaysEl = document.getElementById('empTotalDays');
+            const recordListEl = document.getElementById('recordList');
+            const historyFilterLabel = document.getElementById('historyFilterLabel');
+            const clearEmpBtn = document.getElementById('clearEmpBtn');
+            const overviewGridEl = document.getElementById('overviewGrid');
+            const overviewMonthLabel = document.getElementById('overviewMonthLabel');
+
+            function generateId() {
+                return 'emp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            }
+
+            function getTodayStr() {
+                const d = new Date();
+                return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+            }
+
+            function getYesterdayStr() {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+            }
+
+            function getCurrentMonthStr() {
+                const d = new Date();
+                return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
+            }
+
+            function formatDateShort(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                return `${parseInt(parts[1])}/${parseInt(parts[2])}`;
+            }
+
+            function formatDateFull(dateStr) {
+                if (!dateStr) return '';
+                const [y, m, d] = dateStr.split('-');
+                return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+            }
+
+            function formatMonthFull(monthStr) {
+                if (!monthStr) return '';
+                const [y, m] = monthStr.split('-');
+                return `${y}年${parseInt(m)}月`;
+            }
+
+            function timeStrToSeconds(timeStr) {
+                if (!timeStr) return 0;
+                const parts = timeStr.split(':').map(Number);
+                const h = parts[0] || 0;
+                const m = parts[1] || 0;
+                const s = parts[2] || 0;
+                return h * 3600 + m * 60 + s;
+            }
+
+            function secondsToHours(seconds) {
+                return (seconds / 3600).toFixed(2);
+            }
+
+            function secondsToHours1(seconds) {
+                return (seconds / 3600).toFixed(1);
+            }
+
+            function nowTimeStr() {
+                const now = new Date();
+                return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+            }
+
+            function calcRecord(record) {
+                if (!record.checkIn || !record.checkOut) {
+                    return { workSeconds: 0, overtimeSeconds: 0 };
+                }
+                const startSec = timeStrToSeconds(record.checkIn);
+                let endSec = timeStrToSeconds(record.checkOut);
+                
+                if (endSec < startSec) {
+                    endSec += 24 * 3600;
+                }
+                const totalSeconds = endSec - startSec;
+                if (totalSeconds <= 0) {
+                    return { workSeconds: 0, overtimeSeconds: 0 };
+                }
+                const standardSeconds = 6 * 3600;
+                const workSeconds = totalSeconds;
+                const overtimeSeconds = Math.max(0, totalSeconds - standardSeconds);
+                return { workSeconds, overtimeSeconds };
+            }
+
+            function getEmployeeTotalOvertime(emp) {
+                return emp.records.reduce((sum, r) => {
+                    const { overtimeSeconds } = calcRecord(r);
+                    return sum + overtimeSeconds;
+                }, 0);
+            }
+
+            function getCurrentEmployee() {
+                return employees.find(e => e.id === currentEmployeeId) || null;
+            }
+
+            function getRecordByDate(emp, dateStr) {
+                return emp.records.find(r => r.date === dateStr) || null;
+            }
+
+            function getEmployeeMonthRecords(emp, monthStr) {
+                if (!emp || !monthStr) return [];
+                return emp.records
+                    .filter(r => r.date.startsWith(monthStr))
+                    .sort((a, b) => a.date < b.date ? -1 : 1);
+            }
+
+            function getEmployeeMonthSummary(emp, monthStr) {
+                const records = getEmployeeMonthRecords(emp, monthStr);
+                let totalWork = 0, totalOt = 0, days = 0;
+                records.forEach(r => {
+                    if (r.checkIn && r.checkOut) {
+                        const { workSeconds, overtimeSeconds } = calcRecord(r);
+                        totalWork += workSeconds;
+                        totalOt += overtimeSeconds;
+                        days++;
+                    }
+                });
+                return { days, totalWork, totalOt, records };
+            }
+
+            function addMonths(monthStr, delta) {
+                const [y, m] = monthStr.split('-').map(Number);
+                const d = new Date(y, m - 1 + delta, 1);
+                return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
+            }
+
+            function save() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        employees,
+                        currentEmployeeId
+                    }));
+                } catch (e) {
+                    console.warn('保存失败', e);
+                }
+            }
+
+            function load() {
+                try {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (parsed && Array.isArray(parsed.employees)) {
+                            employees = parsed.employees.filter(e => e && e.id && e.name);
+                            employees.forEach(e => {
+                                if (!Array.isArray(e.records)) e.records = [];
+                            });
+                            currentEmployeeId = parsed.currentEmployeeId;
+                            if (!employees.find(e => e.id === currentEmployeeId)) {
+                                currentEmployeeId = employees.length ? employees[0].id : null;
+                            }
+                        } else {
+                            initDefault();
+                        }
+                    } else {
+                        initDefault();
+                    }
+                } catch (e) {
+                    console.warn('加载失败', e);
+                    initDefault();
+                }
+                if (employees.length === 0) initDefault();
+            }
+
+            function initDefault() {
+                employees = [
+                    { id: generateId(), name: '张三', records: [] },
+                    { id: generateId(), name: '李四', records: [] },
+                    { id: generateId(), name: '王五', records: [] }
+                ];
+                currentEmployeeId = employees[0].id;
+            }
+
+            function updateDateStatusBadge() {
+                const today = getTodayStr();
+                if (selectedDate === today) {
+                    dateStatusBadge.textContent = '今天';
+                    dateStatusBadge.className = 'date-status-badge today';
+                } else if (selectedDate === getYesterdayStr()) {
+                    dateStatusBadge.textContent = '昨天';
+                    dateStatusBadge.className = 'date-status-badge';
+                } else {
+                    dateStatusBadge.textContent = formatDateFull(selectedDate);
+                    dateStatusBadge.className = 'date-status-badge';
+                }
+                datePicker.value = selectedDate;
+            }
+
+            function renderEmployeeTabs() {
+                employeeTabsEl.innerHTML = '';
+                employees.forEach(emp => {
+                    const totalOt = getEmployeeTotalOvertime(emp);
+                    const tab = document.createElement('button');
+                    tab.className = 'emp-tab' + (emp.id === currentEmployeeId ? ' active' : '');
+                    tab.innerHTML = `
+                        ${emp.name}
+                        <span class="emp-ot-badge">${secondsToHours1(totalOt)}h</span>
+                    `;
+                    tab.addEventListener('click', () => {
+                        if (currentEmployeeId === emp.id) return;
+                        currentEmployeeId = emp.id;
+                        save();
+                        renderAll();
+                    });
+                    employeeTabsEl.appendChild(tab);
+                });
+            }
+
+            function renderCurrentEmployeeHeader() {
+                const emp = getCurrentEmployee();
+                if (!emp) {
+                    currentEmpNameEl.innerHTML = '<span style="color:#7b95a6;">未选择员工</span>';
+                    return;
+                }
+                currentEmpNameEl.innerHTML = `
+                    <span>👤 ${emp.name}</span>
+                    <button class="del-emp-btn" data-emp-id="${emp.id}">删除该员工</button>
+                `;
+                const delBtn = currentEmpNameEl.querySelector('.del-emp-btn');
+                if (delBtn) {
+                    delBtn.addEventListener('click', () => deleteEmployee(emp.id));
+                }
+            }
+
+            function deleteEmployee(empId) {
+                const emp = employees.find(e => e.id === empId);
+                if (!emp) return;
+                if (!confirm(`确定删除员工「${emp.name}」及其所有打卡记录吗？`)) return;
+                employees = employees.filter(e => e.id !== empId);
+                if (currentEmployeeId === empId) {
+                    currentEmployeeId = employees.length ? employees[0].id : null;
+                }
+                save();
+                renderAll();
+            }
+
+            function punchCheckIn() {
+                const emp = getCurrentEmployee();
+                if (!emp) { alert('请先添加或选择员工'); return; }
+
+                const date = selectedDate;
+                let record = getRecordByDate(emp, date);
+                if (!record) {
+                    record = { date: date, checkIn: null, checkOut: null, workSeconds: 0, overtimeSeconds: 0 };
+                    emp.records.push(record);
+                }
+                if (record.checkIn) {
+                    alert(`${formatDateFull(date)} 已经打过上班卡了`);
+                    return;
+                }
+
+                record.checkIn = nowTimeStr();
+                record.checkOut = null;
+                record.workSeconds = 0;
+                record.overtimeSeconds = 0;
+                save();
+                renderAll();
+            }
+
+            function punchCheckOut() {
+                const emp = getCurrentEmployee();
+                if (!emp) { alert('请先添加或选择员工'); return; }
+
+                const date = selectedDate;
+                const record = getRecordByDate(emp, date);
+                if (!record || !record.checkIn) {
+                    alert(`${formatDateFull(date)} 请先打上班卡`);
+                    return;
+                }
+                if (record.checkOut) {
+                    alert(`${formatDateFull(date)} 已经打过下班卡了`);
+                    return;
+                }
+
+                record.checkOut = nowTimeStr();
+                const { workSeconds, overtimeSeconds } = calcRecord(record);
+                record.workSeconds = workSeconds;
+                record.overtimeSeconds = overtimeSeconds;
+                save();
+                renderAll();
+            }
+
+            function renderPunchButtons() {
+                const emp = getCurrentEmployee();
+                if (!emp) {
+                    checkInBtn.disabled = true;
+                    checkOutBtn.disabled = true;
+                    checkInSub.textContent = '请先选择员工';
+                    checkOutSub.textContent = '请先选择员工';
+                    return;
+                }
+                const record = getRecordByDate(emp, selectedDate);
+                const hasCheckIn = record && record.checkIn;
+                const hasCheckOut = record && record.checkOut;
+
+                checkInBtn.disabled = !!hasCheckIn;
+                checkInSub.textContent = hasCheckIn ? `已打卡 ${record.checkIn}` : '点击记录上班';
+
+                checkOutBtn.disabled = !hasCheckIn || !!hasCheckOut;
+                if (!hasCheckIn) {
+                    checkOutSub.textContent = '请先上班打卡';
+                } else if (hasCheckOut) {
+                    checkOutSub.textContent = `已打卡 ${record.checkOut}`;
+                } else {
+                    checkOutSub.textContent = '点击记录下班';
+                }
+            }
+
+            function renderSelectedDateStatus() {
+                const emp = getCurrentEmployee();
+                if (!emp) {
+                    todayInTimeEl.textContent = '--:--:--';
+                    todayOutTimeEl.textContent = '--:--:--';
+                    todayInTimeEl.className = 'time placeholder';
+                    todayOutTimeEl.className = 'time placeholder';
+                    todayInExtra.textContent = '';
+                    todayOutExtra.textContent = '';
+                    todayWorkDisplayEl.innerHTML = '0.0 / 0.0 <small>h</small>';
+                    todayCalcExtra.textContent = '';
+                    todayWorkHoursEl.innerHTML = '0.0 <small>小时</small>';
+                    todayOvertimeEl.innerHTML = '0.0 <small>小时</small>';
+                    return;
+                }
+                const record = getRecordByDate(emp, selectedDate);
+
+                if (record && record.checkIn) {
+                    todayInTimeEl.textContent = record.checkIn;
+                    todayInTimeEl.className = 'time';
+                    todayInExtra.textContent = '✅ 已打卡';
+                } else {
+                    todayInTimeEl.textContent = '--:--:--';
+                    todayInTimeEl.className = 'time placeholder';
+                    todayInExtra.textContent = '尚未打卡';
+                }
+
+                if (record && record.checkOut) {
+                    todayOutTimeEl.textContent = record.checkOut;
+                    todayOutTimeEl.className = 'time';
+                    todayOutExtra.textContent = '✅ 已打卡';
+                } else {
+                    todayOutTimeEl.textContent = '--:--:--';
+                    todayOutTimeEl.className = 'time placeholder';
+                    todayOutExtra.textContent = record && record.checkIn ? '等待下班打卡' : '尚未打卡';
+                }
+
+                let workSec = 0, otSec = 0;
+                if (record && record.checkIn && record.checkOut) {
+                    const calc = calcRecord(record);
+                    workSec = calc.workSeconds;
+                    otSec = calc.overtimeSeconds;
+                }
+                const workH = (workSec / 3600).toFixed(2);
+                const otH = (otSec / 3600).toFixed(2);
+                todayWorkDisplayEl.innerHTML = `${workH} / ${otH} <small>h</small>`;
+                todayCalcExtra.textContent = (record && record.checkIn && record.checkOut) ? '工时 / 加班' : '待完成打卡后计算';
+                todayWorkHoursEl.innerHTML = `${secondsToHours(workSec)} <small>小时</small>`;
+                todayOvertimeEl.innerHTML = `${secondsToHours(otSec)} <small>小时</small>`;
+            }
+
+            function renderCurrentTotals() {
+                const emp = getCurrentEmployee();
+                if (!emp) {
+                    empTotalOvertimeEl.innerHTML = '0.0 <small>小时</small>';
+                    empTotalDaysEl.textContent = '0';
+                    return;
+                }
+                const totalOt = getEmployeeTotalOvertime(emp);
+                empTotalOvertimeEl.innerHTML = `${secondsToHours(totalOt)} <small>小时</small>`;
+                empTotalDaysEl.textContent = emp.records.length;
+            }
+
+            function renderMonthSummary() {
+                const emp = getCurrentEmployee();
+                const monthStr = selectedMonth;
+                const summary = emp ? getEmployeeMonthSummary(emp, monthStr) : { days: 0, totalWork: 0, totalOt: 0 };
+                monthDaysCount.textContent = summary.days;
+                monthWorkSum.textContent = secondsToHours(summary.totalWork);
+                monthOtSum.textContent = secondsToHours(summary.totalOt);
+                monthPicker.value = monthStr;
+                historyFilterLabel.textContent = formatMonthFull(monthStr);
+            }
+
+            function renderRecordList() {
+                const emp = getCurrentEmployee();
+                if (!emp) {
+                    recordListEl.innerHTML = '<li class="empty-message">请先添加员工</li>';
+                    return;
+                }
+                const records = getEmployeeMonthRecords(emp, selectedMonth);
+                recordListEl.innerHTML = '';
+                if (records.length === 0) {
+                    recordListEl.innerHTML = `<li class="empty-message">${formatMonthFull(selectedMonth)} 暂无打卡记录</li>`;
+                    return;
+                }
+                const today = getTodayStr();
+                const sorted = [...records].reverse();
+                sorted.forEach(rec => {
+                    const { workSeconds, overtimeSeconds } = calcRecord(rec);
+                    const isComplete = rec.checkIn && rec.checkOut;
+                    const isToday = rec.date === today;
+                    const isSelected = rec.date === selectedDate;
+                    const li = document.createElement('li');
+                    if (isToday) li.classList.add('today-record');
+                    if (isSelected) li.style.outline = '2px solid #2d5e7a';
+                    li.innerHTML = `
+                        <span class="record-date">
+                            ${formatDateShort(rec.date)}
+                            ${isToday ? '<span class="today-tag">今天</span>' : ''}
+                        </span>
+                        <span class="record-times">
+                            <span>${rec.checkIn || '--:--:--'} → ${rec.checkOut || '--:--:--'}</span>
+                        </span>
+                        <span class="record-work">${isComplete ? secondsToHours(workSeconds) + 'h 工时' : '未完成'}</span>
+                        <span class="record-overtime ${overtimeSeconds === 0 ? 'zero' : ''}">
+                            ${isComplete ? secondsToHours(overtimeSeconds) + ' h 加班' : '--'}
+                        </span>
+                        <span class="record-actions">
+                            <button class="edit-rec-btn" data-date="${rec.date}" title="编辑此记录">✎</button>
+                            <button class="del-rec-btn" data-date="${rec.date}" title="删除此记录">✕</button>
+                        </span>
+                    `;
+                    li.addEventListener('click', (e) => {
+                        if (e.target.closest('button')) return;
+                        selectedDate = rec.date;
+                        updateDateStatusBadge();
+                        renderAll();
+                    });
+                    li.querySelector('.edit-rec-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedDate = rec.date;
+                        updateDateStatusBadge();
+                        renderAll();
+                    });
+                    li.querySelector('.del-rec-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!confirm(`确定删除 ${formatDateFull(rec.date)} 的打卡记录吗？`)) return;
+                        emp.records = emp.records.filter(r => r.date !== rec.date);
+                        save();
+                        renderAll();
+                    });
+                    recordListEl.appendChild(li);
+                });
+            }
+
+            function renderOverview() {
+                overviewGridEl.innerHTML = '';
+                overviewMonthLabel.textContent = formatMonthFull(selectedMonth);
+                const sorted = [...employees].sort((a, b) => {
+                    const aSum = getEmployeeMonthSummary(a, selectedMonth);
+                    const bSum = getEmployeeMonthSummary(b, selectedMonth);
+                    return bSum.totalOt - aSum.totalOt;
+                });
+                sorted.forEach(emp => {
+                    const summary = getEmployeeMonthSummary(emp, selectedMonth);
+                    const item = document.createElement('div');
+                    item.className = 'overview-item' + (emp.id === currentEmployeeId ? ' active-emp' : '');
+                    item.innerHTML = `
+                        <div class="overview-name">
+                            ${emp.name}
+                            <span class="small-badge">${summary.days}天</span>
+                        </div>
+                        <div class="overview-stats">
+                            <div class="overview-stat">
+                                <span class="num">${secondsToHours(summary.totalWork)}</span>
+                                <span class="lbl">工时(h)</span>
+                            </div>
+                            <div class="overview-stat">
+                                <span class="num ot">${secondsToHours(summary.totalOt)}</span>
+                                <span class="lbl">加班(h)</span>
+                            </div>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        if (currentEmployeeId !== emp.id) {
+                            currentEmployeeId = emp.id;
+                            save();
+                            renderAll();
+                        }
+                    });
+                    overviewGridEl.appendChild(item);
+                });
+                if (employees.length === 0) {
+                    overviewGridEl.innerHTML = '<div style="color:#7b95a6;padding:10px;text-align:center;grid-column:1/-1;">暂无员工，请添加</div>';
+                }
+            }
+
+            function renderAll() {
+                updateDateStatusBadge();
+                renderEmployeeTabs();
+                renderCurrentEmployeeHeader();
+                renderPunchButtons();
+                renderSelectedDateStatus();
+                renderCurrentTotals();
+                renderMonthSummary();
+                renderRecordList();
+                renderOverview();
+            }
+
+            function clearCurrentEmployeeRecords() {
+                const emp = getCurrentEmployee();
+                if (!emp) return;
+                if (emp.records.length === 0) {
+                    alert('该员工暂无记录');
+                    return;
+                }
+                if (!confirm(`确定清除「${emp.name}」的所有打卡记录吗？（不可恢复）`)) return;
+                emp.records = [];
+                save();
+                renderAll();
+            }
+
+            function addEmployee() {
+                const name = prompt('请输入员工姓名：', `员工${employees.length + 1}`);
+                if (!name || !name.trim()) return;
+                const trimmed = name.trim();
+                const newEmp = { id: generateId(), name: trimmed, records: [] };
+                employees.push(newEmp);
+                currentEmployeeId = newEmp.id;
+                save();
+                renderAll();
+            }
+
+            function setSelectedDate(dateStr) {
+                selectedDate = dateStr;
+                updateDateStatusBadge();
+                renderPunchButtons();
+                renderSelectedDateStatus();
+                renderRecordList();
+            }
+
+            function setSelectedMonth(monthStr) {
+                selectedMonth = monthStr;
+                renderMonthSummary();
+                renderRecordList();
+                renderOverview();
+            }
+
+            function init() {
+                load();
+                employees.forEach(emp => {
+                    emp.records.forEach(rec => {
+                        const calc = calcRecord(rec);
+                        rec.workSeconds = calc.workSeconds;
+                        rec.overtimeSeconds = calc.overtimeSeconds;
+                    });
+                });
+                save();
+
+                selectedDate = getTodayStr();
+                selectedMonth = getCurrentMonthStr();
+                datePicker.value = selectedDate;
+                monthPicker.value = selectedMonth;
+                renderAll();
+
+                addEmpBtn.addEventListener('click', addEmployee);
+                checkInBtn.addEventListener('click', punchCheckIn);
+                checkOutBtn.addEventListener('click', punchCheckOut);
+                clearEmpBtn.addEventListener('click', clearCurrentEmployeeRecords);
+
+                datePicker.addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        setSelectedDate(e.target.value);
+                    }
+                });
+
+                todayBtn.addEventListener('click', () => setSelectedDate(getTodayStr()));
+                yesterdayBtn.addEventListener('click', () => setSelectedDate(getYesterdayStr()));
+
+                monthPicker.addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        setSelectedMonth(e.target.value);
+                    }
+                });
+                prevMonthBtn.addEventListener('click', () => setSelectedMonth(addMonths(selectedMonth, -1)));
+                nextMonthBtn.addEventListener('click', () => setSelectedMonth(addMonths(selectedMonth, 1)));
+                currentMonthBtn.addEventListener('click', () => setSelectedMonth(getCurrentMonthStr()));
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
