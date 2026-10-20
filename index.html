@@ -52,29 +52,14 @@
             flex-wrap: wrap;
         }
 
-        .std-hours-badge {
+        h1 span {
             background: #2d5e7a;
             color: white;
             font-size: 0.85rem;
             font-weight: 400;
-            padding: 6px 16px;
+            padding: 4px 16px;
             border-radius: 40px;
             box-shadow: 0 2px 6px rgba(45, 94, 122, 0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .std-hours-badge:hover {
-            background: #1e4a62;
-            transform: scale(1.05);
-        }
-
-        .std-hours-badge .edit-icon {
-            font-size: 0.75rem;
-            opacity: 0.8;
         }
 
         .subhead {
@@ -186,6 +171,73 @@
             border-color: #5e8ba8;
         }
 
+        /* 新增：标准工时设置栏 */
+        .setting-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 12px 20px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 16px -10px rgba(0, 30, 60, 0.15);
+        }
+
+        .setting-bar-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #3f5d70;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .std-hours-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 40px;
+            padding: 6px 16px;
+            border: 1px solid #d9e4ed;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .std-hours-input-wrapper input {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0a2538;
+            outline: none;
+            width: 60px;
+            text-align: center;
+        }
+
+        .std-hours-input-wrapper span {
+            color: #5e8198;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .btn-save-std {
+            background: #2d7a5e;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 4px 8px -2px rgba(45, 122, 94, 0.3);
+        }
+
+        .btn-save-std:hover {
+            background: #236b50;
+        }
+
         .date-bar {
             display: flex;
             flex-wrap: wrap;
@@ -228,12 +280,6 @@
             padding: 4px 0;
             font-variant-numeric: tabular-nums;
             cursor: pointer;
-        }
-
-        .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0.5;
-            cursor: pointer;
-            font-size: 1.1rem;
         }
 
         .date-quick-btn {
@@ -312,12 +358,6 @@
             padding: 4px 0;
             font-variant-numeric: tabular-nums;
             cursor: pointer;
-        }
-
-        .month-input-wrapper input[type="month"]::-webkit-calendar-picker-indicator {
-            opacity: 0.5;
-            cursor: pointer;
-            font-size: 1.1rem;
         }
 
         .month-nav-btn {
@@ -548,33 +588,6 @@
 
         .summary-value.ot {
             color: #b14e4e;
-        }
-
-        .emp-total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 4px 4px 14px;
-            padding: 0 6px;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .emp-total-row .label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #2d4b5e;
-        }
-
-        .emp-total-row .value {
-            font-weight: 700;
-            color: #b14e4e;
-            font-size: 1.3rem;
-        }
-
-        .emp-total-row .days {
-            font-size: 0.8rem;
-            color: #4e7188;
         }
 
         .history-section {
@@ -894,16 +907,13 @@
             }
             h1 { font-size: 1.45rem; }
             .summary-value { font-size: 1.4rem; }
-            .emp-total-row .value { font-size: 1.1rem; }
             .overview-grid { grid-template-columns: 1fr 1fr; }
             .overview-stats { flex-direction: column; gap: 4px; }
-            .employee-bar { border-radius: 24px; padding: 10px; }
+            .employee-bar, .setting-bar, .date-bar, .month-bar { border-radius: 24px; padding: 12px; }
             .emp-tab { padding: 6px 12px; font-size: 0.82rem; }
             .punch-btn { padding: 18px 12px; font-size: 0.95rem; }
             .punch-btn .icon { font-size: 1.4rem; }
-            .date-bar, .month-bar { border-radius: 24px; padding: 12px; }
-            .date-status-badge { margin-left: 0; }
-            .month-summary-inline { margin-left: 0; }
+            .date-status-badge, .month-summary-inline { margin-left: 0; }
         }
     </style>
 </head>
@@ -912,20 +922,27 @@
         <div class="card">
             <h1>
                 ⏱️ 多人考勤 · 加班计算
-                <!-- 将原来的标准工时标签改为可点击修改 -->
-                <div class="std-hours-badge" id="editStdHoursBtn" title="点击修改每日标准工时">
-                    标准工时 <span id="displayStdHours">6</span>h <span class="edit-icon">✎</span>
-                </div>
+                <span>按月汇总</span>
             </h1>
             <div class="subhead">
                 <span>秒级精度 · 月度统计 · 多员工管理</span>
-                <span class="rule-badge">按月汇总</span>
             </div>
 
             <div class="employee-bar">
                 <span class="employee-bar-label">员工</span>
                 <div class="employee-tabs" id="employeeTabs"></div>
                 <button class="add-emp-btn" id="addEmpBtn">＋ 添加员工</button>
+            </div>
+
+            <!-- 新增：直观的标准工时设置栏 -->
+            <div class="setting-bar">
+                <span class="setting-bar-label">⚙️ 每日标准工时</span>
+                <div class="std-hours-input-wrapper">
+                    <input type="number" id="stdHoursInput" min="0.1" max="24" step="0.5" value="6">
+                    <span>小时 / 天</span>
+                </div>
+                <button class="btn-save-std" id="saveStdHoursBtn">应用并重算</button>
+                <span style="font-size:0.75rem; color:#7f9aaa; margin-left:auto;">修改后，历史记录的加班时长将按新标准自动重算</span>
             </div>
 
             <div class="month-bar">
@@ -1018,7 +1035,7 @@
             </h2>
             <div class="overview-grid" id="overviewGrid"></div>
             <div class="note">
-                <strong>加班规则：</strong> 每人每日工作超过 <span class="dynamic-std">6</span> 小时的部分计为加班。时间精确到秒，相同起止时间不会误算。
+                <strong>加班规则：</strong> 每人每日工作超过 <span id="dynamicStdText" style="font-weight:bold;color:#b14e4e;">6</span> 小时的部分计为加班。
             </div>
         </div>
     </div>
@@ -1026,7 +1043,7 @@
     <script>
         (function() {
             // =========================================================
-            // ☁️ JSONBin 云端配置
+            // ☁️ JSONBin 云端配置 (已填入)
             // =========================================================
             const JSONBIN_BIN_ID = '6ad709dfac6210605a41560a'; 
             const JSONBIN_MASTER_KEY = '$2a$10$aBvRye9/VnNj1C.GQOei6.RRC/3/iuNF1AzfVC6q7SMbBln8d1Aqe'; 
@@ -1038,13 +1055,16 @@
             let selectedDate = getTodayStr();
             let selectedMonth = getCurrentMonthStr();
             
-            // 默认标准工时，支持小数（如 7.5）
+            // 默认标准工时
             let standardHours = 6; 
 
             const employeeTabsEl = document.getElementById('employeeTabs');
             const addEmpBtn = document.getElementById('addEmpBtn');
-            const editStdHoursBtn = document.getElementById('editStdHoursBtn');
-            const displayStdHours = document.getElementById('displayStdHours');
+            
+            // 标准工时相关 DOM
+            const stdHoursInput = document.getElementById('stdHoursInput');
+            const saveStdHoursBtn = document.getElementById('saveStdHoursBtn');
+            const dynamicStdText = document.getElementById('dynamicStdText');
             
             const monthPicker = document.getElementById('monthPicker');
             const prevMonthBtn = document.getElementById('prevMonthBtn');
@@ -1154,7 +1174,6 @@
                     return { workSeconds: 0, overtimeSeconds: 0 };
                 }
                 
-                // 这里的 standardSeconds 现在使用用户设定的 standardHours
                 const standardSeconds = standardHours * 3600;
                 const workSeconds = totalSeconds;
                 const overtimeSeconds = Math.max(0, totalSeconds - standardSeconds);
@@ -1207,7 +1226,6 @@
             // ☁️ 云端同步核心
             // =========================================================
             async function save() {
-                // 把 standardHours 也存入云端，实现配置同步
                 const dataToSave = { employees, currentEmployeeId, standardHours };
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -1245,7 +1263,6 @@
                     if (cloudData && Array.isArray(cloudData.employees) && cloudData.employees.length > 0) {
                         employees = cloudData.employees;
                         currentEmployeeId = cloudData.currentEmployeeId;
-                        // 读取云端保存的标准工时
                         standardHours = cloudData.standardHours !== undefined ? cloudData.standardHours : 6;
                         console.log('云端加载成功');
                         return;
@@ -1603,11 +1620,9 @@
             }
 
             function renderAll() {
-                // 更新顶部和底部的标准工时显示
-                displayStdHours.textContent = standardHours;
-                document.querySelectorAll('.dynamic-std').forEach(el => {
-                    el.textContent = standardHours;
-                });
+                // 更新界面上的标准工时显示和输入框
+                stdHoursInput.value = standardHours;
+                dynamicStdText.textContent = standardHours;
 
                 updateDateStatusBadge();
                 renderEmployeeTabs();
@@ -1659,20 +1674,18 @@
                 renderOverview();
             }
 
-            // 点击标准工时徽章的事件处理
-            function editStandardHours() {
-                const val = prompt('请输入每日标准工时（小时），支持小数（例如：6 或 7.5）：', standardHours);
-                if (val === null) return; // 点了取消
-                
+            // 点击应用标准工时按钮
+            function handleSaveStdHours() {
+                const val = stdHoursInput.value;
                 const num = parseFloat(val);
                 if (isNaN(num) || num <= 0 || num > 24) {
-                    alert('请输入 0 到 24 之间的有效数字');
+                    alert('请输入 0 到 24 之间的有效数字（支持小数，如 7.5）');
                     return;
                 }
                 
                 standardHours = num;
                 
-                // 重新计算所有人的所有记录（因为标准变了，加班时间也会变）
+                // 遍历所有员工的记录，重新计算
                 employees.forEach(emp => {
                     emp.records.forEach(rec => {
                         const calc = calcRecord(rec);
@@ -1681,8 +1694,9 @@
                     });
                 });
                 
-                save(); // 保存到云端
+                save(); // 保存设置到云端
                 renderAll(); // 刷新界面
+                alert('标准工时已更新，历史记录的加班时长已重新计算！');
             }
 
             async function init() {
@@ -1707,8 +1721,14 @@
                 checkOutBtn.addEventListener('click', punchCheckOut);
                 clearEmpBtn.addEventListener('click', clearCurrentEmployeeRecords);
                 
-                // 绑定修改标准工时的点击事件
-                editStdHoursBtn.addEventListener('click', editStandardHours);
+                // 绑定标准工时保存按钮事件
+                saveStdHoursBtn.addEventListener('click', handleSaveStdHours);
+                // 也支持在输入框按回车
+                stdHoursInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        handleSaveStdHours();
+                    }
+                });
 
                 datePicker.addEventListener('change', (e) => {
                     if (e.target.value) {
