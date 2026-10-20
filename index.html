@@ -48,8 +48,8 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            /* 原本是 4px，因为删除了下方的副标题，这里加大到 20px 保持间距 */
-            margin-bottom: 20px; 
+            /* 因为删除了副标题，这里加大到 24px 保证下方间距合适 */
+            margin-bottom: 24px; 
             flex-wrap: wrap;
         }
 
@@ -62,6 +62,8 @@
             border-radius: 40px;
             box-shadow: 0 2px 6px rgba(45, 94, 122, 0.2);
         }
+
+        /* 删除了 .subhead 相关的 CSS */
 
         .rule-badge {
             background: #d4e6f2;
@@ -910,11 +912,11 @@
 <body>
     <div class="app">
         <div class="card">
+            <!-- 删除了下方的那段 div.subhead 结构 -->
             <h1>
                 ⏱️ 哈哈哈
                 <span>按月汇总</span>
             </h1>
-            <!-- 删除了副标题那一行 -->
 
             <div class="employee-bar">
                 <span class="employee-bar-label">员工</span>
