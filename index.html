@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 修改了这里 -->
     <title>哈哈哈</title>
     <style>
         * {
@@ -920,7 +921,8 @@
     <div class="app">
         <div class="card">
             <h1>
-                ⏱️ 多人考勤 · 加班计算
+                <!-- 修改了这里 -->
+                ⏱️ 哈哈哈
                 <span>按月汇总</span>
             </h1>
             <div class="subhead">
@@ -1227,26 +1229,18 @@
                     return;
                 }
                 isSyncing = true;
-                // 视觉反馈
                 document.body.style.cursor = 'wait';
-                const originalBtnText = checkInBtn.querySelector('span:nth-child(2)').textContent;
 
                 try {
-                    // 1. 强制从云端拉取最新数据（解决李四覆盖张三的问题）
-                    await load();
-                    
-                    // 2. 执行具体的业务逻辑
-                    actionFn();
-                    
-                    // 3. 推送最新数据到云端
-                    await save();
+                    await load(); // 强制拉取最新
+                    actionFn();   // 执行修改
+                    await save(); // 推回云端
                 } catch (e) {
                     console.error('同步操作失败', e);
                     alert('网络异常，本次操作未能保存到云端，请检查网络后重试！');
                 } finally {
                     isSyncing = false;
                     document.body.style.cursor = 'default';
-                    // 刷新界面
                     renderAll();
                 }
             }
@@ -1286,7 +1280,6 @@
                         standardHours = cloudData.standardHours !== undefined ? cloudData.standardHours : 6;
                         return;
                     } else {
-                        // 云端为空，使用本地默认或旧数据
                         initDefault();
                     }
                 } catch (e) {
@@ -1304,7 +1297,7 @@
             }
 
             function initDefault() {
-                if (employees.length > 0) return; // 已经有数据就不覆盖
+                if (employees.length > 0) return; 
                 employees = [
                     { id: generateId(), name: '张三', records: [] },
                     { id: generateId(), name: '李四', records: [] },
@@ -1344,7 +1337,6 @@
                     tab.addEventListener('click', () => {
                         if (currentEmployeeId === emp.id) return;
                         currentEmployeeId = emp.id;
-                        // 切换当前员工不需要同步云端，只需本地记录即可
                         save();
                         renderAll();
                     });
@@ -1383,7 +1375,6 @@
                 if (!emp) { alert('请先添加或选择员工'); return; }
 
                 syncAction(() => {
-                    // 注意：这里的 emp 可能是 load 后最新的引用
                     const freshEmp = getCurrentEmployee(); 
                     const date = selectedDate;
                     let record = getRecordByDate(freshEmp, date);
@@ -1707,7 +1698,6 @@
             }
 
             async function init() {
-                // 首次加载
                 await load();
                 
                 employees.forEach(emp => {
